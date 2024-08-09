@@ -48,7 +48,7 @@ For creating or cancelling the task we will follow a similar process:
 
 ### Create Task
 
-### Propose transaction
+#### Propose transaction
 ```typescript
   const automate = new AutomateSDK(chainId, deployer);
   const cid="QmSBdgzCUYcpwAWQPZc4oFn1zYwb4LovCXMPyrHUncBQ7S"
@@ -87,7 +87,7 @@ Proposed a transaction with Safe: 0x6b594E0eD457654FD3F129de134d343ab3bf8957
 ✨  Done in 9.11s.
 ```
 
-### Confirm transaction
+#### Confirm transaction
 Every required signer has to confirm the transaction, this can be done programatically as shown below or in the safe UI
 
 We will need to grab the SafeTxHash from previous script and run
@@ -109,7 +109,7 @@ Confirmed a transaction with Safe: 0x6b594E0eD457654FD3F129de134d343ab3bf8957
 - Sender signature: 0xf7b5e057d2720ebbb5792da973c48194f0df6fde2b9e1334e2556dec8cc28b51505b287bb76587143ac23d6ac5b45cca98dbac3a7c8d7d4c94e255d9d871b1f21f
 ✨  Done in 5.96s.
 ```
-### Execute transaction
+#### Execute transaction
 Once all signatures have been confirmed we are ready to execute. We will need here also to pass the txHash
 
 Code [here](./scripts/safe/create-task/execute-create.ts)
