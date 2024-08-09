@@ -1,0 +1,1 @@
+export const safeAddress= "0x6b594E0eD457654FD3F129de134d343ab3bf8957"
