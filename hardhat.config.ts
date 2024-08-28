@@ -9,6 +9,7 @@ import "hardhat-deploy";
 import "@nomiclabs/hardhat-etherscan";
 
 
+
 // Process Env Variables
 import * as dotenv from "dotenv";
 dotenv.config({ path: __dirname + "/.env" });
@@ -33,15 +34,22 @@ const config: HardhatUserConfig = {
       default: 0,
     },
   },
-  defaultNetwork: "sepolia",
+  defaultNetwork: "hardhat",
 
   networks: {
     hardhat: {
       forking: {
-        url:  `https://rpc.reya-cronos.gelato.digital`,
-      },
-    },
+        url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}`,
+        blockNumber:20575065
 
+      //url: `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_ID}`,
+      },
+     // chainId: 1337,
+    },
+    localhost: {
+      url: 'http://127.0.0.1:8545',
+      chainId: 1337,
+    },
     ethereum: {
       accounts: PK ? [PK] : [],
       chainId: 1,
@@ -96,6 +104,9 @@ const config: HardhatUserConfig = {
           evmVersion: "paris",
         },
       },
+      {
+        version:"0.8.11"
+      }
     ],
   },
 
@@ -110,7 +121,7 @@ const config: HardhatUserConfig = {
       unreal: 'your API key',
       liskSepolia: 'your API KEY',
       reyaCronos: 'your API KEY',
-      //mumbai: ETHERSCAN_API_KEY!
+      sepolia:'VDCE9RBJ9EE8417IG1C51WRJXRITPQIBI3'
     },
     customChains: [
       {

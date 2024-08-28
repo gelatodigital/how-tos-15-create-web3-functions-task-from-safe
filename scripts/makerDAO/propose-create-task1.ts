@@ -14,8 +14,9 @@ dotenv.config({ path: ".env" });
 
 import SafeApiKit from "@safe-global/api-kit";
 import { AutomateSDK, TriggerType } from "@gelatonetwork/automate-sdk";
-import { safeAddress } from "../safe";
+
 import { task } from "hardhat/config";
+import { makerAddress } from "../safe/safe";
 
 const { ethers } = hre;
 
@@ -31,7 +32,7 @@ async function main() {
 
   const protocolKit = await Safe.create({
     ethAdapter,
-    safeAddress,
+    safeAddress:makerAddress
   });
 
   const predictedSafeAddress =
@@ -46,31 +47,32 @@ async function main() {
   const chainId = (await ethers.provider.getNetwork()).chainId;
   const automate = new AutomateSDK(chainId, deployer);
 
-  let abi:any[] = ["function test(address check)"];
+  let abi:any[] =  [
+    "function canTopUp() external view returns (bool canTopUp, bytes memory payload)",
+    "function topUp() external"
+  ]
   let iface =  new ethers.utils.Interface(abi);
-  let resolverData = iface.encodeFunctionData("checker", [2,3,4]);
-
-  const cid="QmSBdgzCUYcpwAWQPZc4oFn1zYwb4LovCXMPyrHUncBQ7S"
+  let resolverData = iface.encodeFunctionData("canTopUp",[]);
+  let targetAddress = "0xbfDC6b9944B7EFdb1e2Bc9D55ae9424a2a55b206"
+  let execSelector = iface.getSighash("topUp") 
   const { taskId, tx } = await automate.prepareTask({
-    name: "heartbeat",
-    execSelector:"",
-    execAddress:"",
-    resolverAddress:"",
-    resolverData:"",
+    name: "test",
+    execSelector,
+    execAddress:targetAddress,
+    resolverAddress:targetAddress,
+    resolverData,
     dedicatedMsgSender:true,
     trigger: {
-      interval: 30 * 1000,
+      interval: 3600 * 1000,
       type: TriggerType.TIME,
     },
   },
   {},
-  safeAddress // important to pass the safe address as task creator
+  makerAddress // important to pass the safe address as task creator
 );
 
 
-
-
-  const txServiceUrl = 'https://safe-transaction-sepolia.safe.global' 
+  const txServiceUrl = 'https://safe-transaction-mainnet.safe.global';
   const service = new SafeApiKit({ txServiceUrl, ethAdapter: ethAdapter })
 
 
@@ -87,7 +89,7 @@ async function main() {
   const safeTxHash = await protocolKit.getTransactionHash(safeTransaction)
   const signature = await protocolKit.signTransactionHash(safeTxHash)
   await service.proposeTransaction({
-    safeAddress: safeAddress,
+    safeAddress: makerAddress,
     safeTransactionData: safeTransaction.data,
     safeTxHash,
     senderAddress ,
@@ -95,7 +97,7 @@ async function main() {
   })
 
   
-  console.log('Proposed a transaction with Safe:', safeAddress)
+  console.log('Proposed a transaction with Safe:', makerAddress)
   console.log('- safeTxHash:', safeTxHash)
   console.log('- Sender:', senderAddress)
   console.log('- Sender signature:', signature.data)

@@ -28,22 +28,26 @@ async function main() {
   console.log(chainId)
   const automate = new AutomateSDK(chainId, wallet);
 
-  let abi:any[] = counterJson.abi;
+  let abi:any[] =  [
+    "function checker(address _sequencer,bytes32 _network, uint256 _startIndex, uint256 _endIndex ) external returns (bool, bytes memory)",
+    "function canTopUp() external view returns (bool canTopUp, bytes memory payload)",
+    "function topUp() external"
+  ]
   let iface =  new ethers.utils.Interface(abi);
-  let resolverData = iface.encodeFunctionData("checker", [8]);
-  let conunterAddress = "0xc2E00Dea3cc483e057519D1df9d313EF2a52C1Ae"
-  let execSelector = iface.getSighash("updatePrice") 
+  let resolverData = iface.encodeFunctionData("checker",[]);
+  let targetAddress = "0x698c77E5EEc653FcfA6D541CbfC0187B04f575B5"
+  let execSelector = iface.getSighash("topUp") 
 
 
   const { taskId, tx } = await automate.prepareTask({
     name: "test",
     execSelector,
-    execAddress:conunterAddress,
-    resolverAddress:conunterAddress,
+    execAddress:targetAddress,
+    resolverAddress:targetAddress,
     resolverData,
     dedicatedMsgSender:true,
     trigger: {
-      interval: 60 * 1000,
+      interval: 3600 * 1000,
       type: TriggerType.TIME,
     },
   });
