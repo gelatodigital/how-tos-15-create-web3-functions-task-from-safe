@@ -21,6 +21,7 @@ cache
 # macOS
 .DS_Store
 *.icloud
+._*
 
 # redis
 dump.rdb

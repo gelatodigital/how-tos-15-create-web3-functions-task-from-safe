@@ -1,39 +1,39 @@
 import hre from "hardhat";
-
-import Safe, {
-  EthersAdapter,
-} from "@safe-global/protocol-kit";
-import {
-  MetaTransactionData,
-  OperationType,
-} from "@safe-global/safe-core-sdk-types";
-
 import * as dotenv from "dotenv";
 
 dotenv.config({ path: ".env" });
 
-import SafeApiKit from "@safe-global/api-kit";
-import { AutomateSDK, TriggerType } from "@gelatonetwork/automate-sdk";
-import { safeAddress } from "../safe/safe";
-import { task } from "hardhat/config";
-
 const { ethers } = hre;
 
-async function main() {
+// Automate contract address on eduTestnet
+const AUTOMATE_ADDRESS = "0x2A6C106ae13B558BB9E2Ec64Bd2f1f7BEFF3A5E0";
 
-  const [deployer] = await ethers.getSigners(); 
+// cancelTask(bytes32) function selector: keccak256("cancelTask(bytes32)") = 0x813785e6
+const CANCEL_TASK_ABI = ["function cancelTask(bytes32 _taskId)"];
+
+async function main() {
+  const [deployer] = await ethers.getSigners();
 
   const chainId = (await ethers.provider.getNetwork()).chainId;
-  console.log(chainId)
-  const automate = new AutomateSDK(chainId, deployer);
-  const taskId = "0xc35e11031c59558b2c4a9c35d9ab23fb4feae7f3e9f5fac689d95bdc9cb0d77d"
-  const { tx } = await automate.cancelTask(taskId)
+  console.log("Chain ID:", chainId);
 
+  const taskId =
+    "0xd16a0d4ad0a1e53b5453c985f49d0adb1154e4d7fcd3df06a6dc648a196cabe7";
 
-  let receipt=  await tx.wait()
-  console.log('- txHash:', receipt.transactionHash)
- 
+  // Encode calldata directly: 0x813785e6 + taskId (32 bytes)
+  const iface = new ethers.utils.Interface(CANCEL_TASK_ABI);
+  const calldata = iface.encodeFunctionData("cancelTask", [taskId]);
 
+  console.log("Automate contract:", AUTOMATE_ADDRESS);
+  console.log("Calldata:", calldata);
 
+  const tx = await deployer.sendTransaction({
+    to: AUTOMATE_ADDRESS,
+    data: calldata,
+  });
+
+  const receipt = await tx.wait();
+  console.log("- txHash:", receipt.transactionHash);
 }
+
 main();

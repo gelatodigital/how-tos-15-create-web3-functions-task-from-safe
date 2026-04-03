@@ -147,3 +147,88 @@ $ npx hardhat run ./scripts/safe/create-task/confirm-cancel.ts
 ```shell
 $ npx hardhat run ./scripts/safe/create-task/execute-cancel.ts
 ```
+
+## 1Balance Withdrawal from Safe (Polygon)
+
+The withdrawal process from Gelato 1Balance consists of two on-chain transactions with an off-chain settlement step in between.
+
+> **Important:** Update the `safeAddress` in [./scripts/safe/safe.ts](./scripts/safe/safe.ts) to your Safe address on Polygon before running these scripts.  
+> Update `withdrawalAmount` in the propose scripts to the amount you wish to withdraw (USDC has 6 decimals, e.g. `10000000` = 10 USDC).
+
+**Contract:** [Gelato1Balance on Polygon](https://polygonscan.com/address/0x7506c12a824d73d9b08564d5afc22c949434755e#writeProxyContract)  
+**Token:** USDC (`0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359`)
+
+### Step 1: Initiate Withdrawal
+
+This submits a `requestWithdrawal` transaction to the 1Balance contract, signaling your intent to withdraw.
+
+#### Propose
+```shell
+$ yarn withdrawal:propose-initiate
+```
+Code [here](./scripts/safe/withdrawal/propose-initiate.ts)
+
+#### Confirm
+Grab the `safeTxHash` from the propose output and paste it into [confirm-withdrawal.ts](./scripts/safe/withdrawal/confirm-withdrawal.ts).
+
+```shell
+$ yarn withdrawal:confirm
+```
+
+#### Execute
+Paste the same `safeTxHash` into [execute-withdrawal.ts](./scripts/safe/withdrawal/execute-withdrawal.ts).
+
+```shell
+$ yarn withdrawal:execute
+```
+
+### Step 2: Wait for Settlement (Off-chain)
+
+After the `requestWithdrawal` transaction is confirmed on-chain, the Gelato backend needs to process and settle the request. **This can take several hours.**
+
+During settlement, Gelato's backend:
+1. Detects the `LogRequestWithdrawal` event emitted by the contract.
+2. Validates the withdrawal amount against your deposited balance.
+3. Updates the Merkle tree to include your withdrawal allocation.
+4. Settles a new Merkle root on-chain via the `settle` function.
+
+You can check if settlement is complete by querying:
+```
+https://api.gelato.digital/1balance/networks/mainnets/sponsors/<your-safe-address>
+```
+
+Look for `_totalValidRequestedWithdrawAmount` in the response. Once this value is greater than `0`, your withdrawal is settled and ready to finalize.
+
+### Step 3: Finalize Withdrawal
+
+The finalize script automatically handles the off-chain steps before proposing the on-chain `withdraw` transaction:
+
+1. **Checks settlement status** - Queries the Gelato API to verify `_totalValidRequestedWithdrawAmount > 0`. If not yet settled, it exits with a message to retry later.
+2. **Fetches Merkle Proof** - Retrieves the `_merkleProof` from:
+   ```
+   https://api.gelato.digital/1balance/networks/137/tokens/<usdc-address>/sponsors/<your-safe-address>/proof
+   ```
+   The proof cryptographically validates your withdrawal against the current Merkle root stored in the contract.
+3. **Proposes the withdraw transaction** - Encodes a call to the contract's `withdraw` function with `_token`, `_amount`, `_totalValidRequestedWithdrawAmount`, and `_merkleProof`, then proposes it through the Safe.
+
+#### Propose
+```shell
+$ yarn withdrawal:propose-finalize
+```
+Code [here](./scripts/safe/withdrawal/propose-finalize.ts)
+
+#### Confirm
+Grab the `safeTxHash` from the propose output and paste it into [confirm-withdrawal.ts](./scripts/safe/withdrawal/confirm-withdrawal.ts).
+
+```shell
+$ yarn withdrawal:confirm
+```
+
+#### Execute
+Paste the same `safeTxHash` into [execute-withdrawal.ts](./scripts/safe/withdrawal/execute-withdrawal.ts).
+
+```shell
+$ yarn withdrawal:execute
+```
+
+Once the transaction is confirmed, your USDC funds will be transferred to the Safe.

@@ -15,8 +15,6 @@ dotenv.config({ path: __dirname + "/.env" });
 
 const PK = process.env.PK;
 
-const ALCHEMY_ID = process.env.ALCHEMY_ID;
-// const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
 
 // HardhatUserConfig bug
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,29 +31,13 @@ const config: HardhatUserConfig = {
       default: 0,
     },
   },
-  defaultNetwork: "sepolia",
+  defaultNetwork: "plasmaTestnet",
 
   networks: {
     hardhat: {
       forking: {
         url:  `https://rpc.reya-cronos.gelato.digital`,
       },
-    },
-
-    ethereum: {
-      accounts: PK ? [PK] : [],
-      chainId: 1,
-      url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_ID}`,
-    },
-    sepolia: {
-      chainId: 11155111,
-      url: `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_ID}`,
-      accounts: PK ? [PK] : [],
-    },
-    mumbai: {
-      accounts: PK ? [PK] : [],
-      chainId: 80001,
-      url: `https://polygon-mumbai.g.alchemy.com/v2/_HsuvYjrWX8zIZS6oAXPWU8OR1IyNYy-`,
     },
     polygon: {
       accounts: PK ? [PK] : [],
@@ -77,10 +59,15 @@ const config: HardhatUserConfig = {
       chainId: 111188,
       url: `https://real.drpc.org`,
     },
-    reyaCronos: {
+    eduTestnet: {
       accounts: PK ? [PK] : [],
-      chainId: 89346161,
-      url: `https://rpc.reya-cronos.gelato.digital`,
+      chainId: 656476,
+      url: `https://rpc.open-campus-codex.gelato.digital`,
+    },
+    plasmaTestnet: {
+      accounts: PK ? [PK] : [],
+      chainId: 168587773,
+      url: `https://sepolia.blast.io`,
     },
  
   },
